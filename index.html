@@ -1,1 +1,81 @@
-<div>div!</div>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Microphone Recording with Audio-to-Text</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    button {
+      font-size: 16px;
+      padding: 10px 20px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Microphone Recording with Audio-to-Text</h1>
+  
+  <div id="controls">
+    <button id="recordBtn">Start Recording</button>
+    <button id="stopBtn" disabled>Stop Recording</button>
+  </div>
+  
+  <div id="transcription"></div>
+  
+  <script>
+    const recordBtn = document.getElementById('recordBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const transcriptionDiv = document.getElementById('transcription');
+
+    let mediaRecorder;
+    let recordedChunks = [];
+
+    recordBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.addEventListener('dataavailable', (event) => {
+          recordedChunks.push(event.data);
+        });
+
+        mediaRecorder.addEventListener('stop', async () => {
+          const blob = new Blob(recordedChunks, { 'type': 'audio/mpeg' });
+          const formData = new FormData();
+          formData.append('audio', blob, 'recorded-audio.wav');
+
+          try {
+            const response = await fetch('/transcribe', {
+              method: 'POST',
+              body: formData
+            });
+            const transcription = await response.json();
+            transcriptionDiv.textContent = `Transcription: ${transcription.text}`;
+          } catch (err) {
+            console.error('Error transcribing audio:', err);
+            transcriptionDiv.textContent = 'Error transcribing audio.';
+          }
+
+          recordedChunks = [];
+        });
+
+        mediaRecorder.start();
+        recordBtn.disabled = true;
+        stopBtn.disabled = false;
+      } catch (err) {
+        console.error('Error accessing microphone:', err);
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      mediaRecorder.stop();
+      recordBtn.disabled = false;
+      stopBtn.disabled = true;
+    });
+  </script>
+</body>
+</html>
