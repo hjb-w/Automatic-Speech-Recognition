@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Microphone Recording with Audio-to-Text</title>
+  <title>Microphone Recording</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -17,19 +17,19 @@
   </style>
 </head>
 <body>
-  <h1>Microphone Recording with Audio-to-Text</h1>
+  <h1>Microphone Recording</h1>
   
   <div id="controls">
     <button id="recordBtn">Start Recording</button>
     <button id="stopBtn" disabled>Stop Recording</button>
   </div>
   
-  <div id="transcription"></div>
+  <audio id="recordedAudio" controls></audio>
   
   <script>
     const recordBtn = document.getElementById('recordBtn');
     const stopBtn = document.getElementById('stopBtn');
-    const transcriptionDiv = document.getElementById('transcription');
+    const recordedAudio = document.getElementById('recordedAudio');
 
     let mediaRecorder;
     let recordedChunks = [];
@@ -43,23 +43,10 @@
           recordedChunks.push(event.data);
         });
 
-        mediaRecorder.addEventListener('stop', async () => {
+        mediaRecorder.addEventListener('stop', () => {
           const blob = new Blob(recordedChunks, { 'type': 'audio/mpeg' });
-          const formData = new FormData();
-          formData.append('audio', blob, 'recorded-audio.wav');
-
-          try {
-            const response = await fetch('/transcribe', {
-              method: 'POST',
-              body: formData
-            });
-            const transcription = await response.json();
-            transcriptionDiv.textContent = `Transcription: ${transcription.text}`;
-          } catch (err) {
-            console.error('Error transcribing audio:', err);
-            transcriptionDiv.textContent = 'Error transcribing audio.';
-          }
-
+          recordedAudio.src = URL.createObjectURL(blob);
+          recordedAudio.controls = true;
           recordedChunks = [];
         });
 
