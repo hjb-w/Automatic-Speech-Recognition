@@ -1,6 +1,6 @@
 # Microphone Recording Website
 
-Contains a simple web app that allows users to record audio from their microphone and have it transcribed using a OpenAI's Whisper large-3 speech recognition model.
+A simple web app that allows users to record audio from their microphone and have it transcribed using a OpenAI's Whisper large-3 speech recognition model.
 
 ## Features
 
